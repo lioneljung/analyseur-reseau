@@ -1,9 +1,14 @@
-CFLAGS = -Wall -Wextra -Werror -lpcap
+CFLAGS = -Wall -Wextra -Werror -lpcap -g
 CC = gcc
-OBJECTS = 
+OBJECTS = utils.o
+EXEC = analyseur
 
 all: main.c $(OBJECTS)
-	$(CC) $< $(CFLAGS) -o main
+	$(CC) $< $(OBJECTS) $(CFLAGS) -o $(EXEC)
 
 %.o: %.c
 	$(CC) -c $< $(CFLAGS)
+
+clean:
+	rm $(OBJECTS)
+	rm $(EXEC)
