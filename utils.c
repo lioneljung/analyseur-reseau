@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include "defs.h"
 
-
-void usage(char * argv[]){
+void usage(char *argv[])
+{
     printf("Ce programme permet de voir le trafic réseau.\n");
     printf("usage: %s [-i <interface>] [-o <fichier>] [-v <1..3>]\n", argv[0]);
     printf("option:\n");
@@ -16,8 +16,8 @@ void usage(char * argv[]){
     exit(EXIT_FAILURE);
 }
 
-
-void getMac(unsigned char * addr, char * dst){
+void getMac(unsigned char *addr, char *dst)
+{
     snprintf(dst, MAC_SIZE, "%X:%X:%X:%X:%X:%X",
-        addr[0], addr[1], addr[2], addr[3], addr[4], addr[5]);
+             addr[0], addr[1], addr[2], addr[3], addr[4], addr[5]);
 }
