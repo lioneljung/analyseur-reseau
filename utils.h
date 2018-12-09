@@ -4,7 +4,9 @@
 #include <pcap.h>
 #include <stdio.h>
 #include <netinet/ip.h>   // header IP
+#include <netinet/ip6.h>  // header IPv6
 #include <net/ethernet.h> // header Ethernet
+#include <linux/if_arp.h> // header ARP
 #include <netinet/udp.h>  // header UDP
 #include <netinet/tcp.h>  // header TCP
 #include <sys/socket.h>   // conversion
@@ -29,13 +31,18 @@ void getMac(unsigned char * addr, char * dst);
 int analyse(const char *mydev, FILE *fileflux, int mode);
 
 /**
- * \brief Initialisation d'une session de sniffing
+ * \brief Initialisation d'une session de sniffing en directe.
  */
-pcap_t *initSnif(const char *mydev, int readTime, char *errbuf);
+pcap_t *initSnifLive(const char *mydev, int readTime, char *errbuf);
+
+/**
+ * \brief Initialisation d'une session de lecture de paquets dans un fichier.
+ */
+pcap_t *initSnifOffline(FILE *fichier, char *errbuf);
 
 /**
  * \brief Analyse d'un paquet. Affichage selon le mode choisi.
  */
-void analysePaquet(const u_char *packet, struct pcap_pkthdr infos, int mode);
+void analysePaquet(const u_char *packet, struct pcap_pkthdr infos, int mode, int compteur);
 
 #endif

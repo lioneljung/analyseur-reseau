@@ -16,6 +16,13 @@ int main(int argc, char *argv[])
     FILE *fileflux = NULL;
     memset(errbuf, '0', PCAP_ERRBUF_SIZE);
 
+    // commande --help pour avoir des informations sur le programme
+    if (argc == 2 && strncmp(argv[1], "--help", 6) == 0)
+    {
+        printf("Commande --help appelée\n");
+        usage(argv);
+    }
+
     // analyse des options
     while ((c = getopt(argc, argv, "i:o:f:v:")) != ERROR)
     {

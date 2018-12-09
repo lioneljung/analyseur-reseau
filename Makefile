@@ -1,6 +1,7 @@
 CFLAGS = -Wall -Wextra -Werror -lpcap -g
 CC = gcc
-OBJECTS = utils.o analyse.o affichage.o
+OBJECTS = utils.o analyse.o affichage.o \
+	ipv6.o dns.o http.o
 EXEC = analyseur
 
 all: main.c $(OBJECTS)
