@@ -43,3 +43,15 @@ void afficherIp6Concis(struct ip6_hdr * ip)
     printf("IPV6: ");
     printf("%s > %s - ", ip_src, ip_dst);
 }
+
+void afficherIp6Synthe(struct ip6_hdr * ip)
+{
+    char ip_src[INET6_ADDRSTRLEN], ip_dst[INET6_ADDRSTRLEN];
+    inet_ntop(AF_INET6, &ip->ip6_src, ip_src, INET6_ADDRSTRLEN);
+    inet_ntop(AF_INET6, &ip->ip6_dst, ip_dst, INET6_ADDRSTRLEN);
+    printf("IPV6: ");
+    printf("%s > %s - ", ip_src, ip_dst);
+    printf("Hop Limit=%d - ", ntohs(ip->ip6_hops));
+    printf("Next Header=%d", ntohs(ip->ip6_nxt));
+    printf("\n");
+}

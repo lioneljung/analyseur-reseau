@@ -9,8 +9,13 @@
 u_int analyseExtensionIp6(const u_char *packet, struct ip6_hdr *ip6);
 
 /**
- * \brief Affichage concis du header ipv6
+ * \brief Affichage concis du header ipv6: afficher addresses source et destination
  */
 void afficherIp6Concis(struct ip6_hdr * ip);
+
+/**
+ * \brief Affichage synthétique d'IPv6
+ */
+void afficherIp6Synthe(struct ip6_hdr * ip);
 
 #endif

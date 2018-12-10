@@ -104,7 +104,6 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
-    printf("\nSIGINT reçu\n");
     printf("\nFin de l'analyse.\n");
     if(oflag) 
         fclose(fileflux);

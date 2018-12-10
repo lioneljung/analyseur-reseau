@@ -62,9 +62,11 @@ int analyse(const char *mydev, FILE *fileflux, int mode)
         }
         while ((packet != NULL) && (sigIntIn == 0))
         {
-            packet = pcap_next(handle, &infos);
-            analysePaquet(packet, infos, mode, compteur);
-            compteur++;
+            if ((packet = pcap_next(handle, &infos)) != NULL)
+            {
+                analysePaquet(packet, infos, mode, compteur);
+                compteur++;
+            }
         }
     }
     printf("\n%d paquets capturés.\n", compteur);
@@ -89,15 +91,15 @@ pcap_t *initSnifOffline(FILE *fichier, char *errbuf)
 // analyse d'un paquet
 void analysePaquet(const u_char *packet, struct pcap_pkthdr infos, int mode, int compteur)
 {
-    struct ethhdr *ethernet;
+    struct ethhdr *ethernet = NULL;
     struct iphdr *ip = NULL;
     struct ip6_hdr *ip6 = NULL;
-    struct arphdr *arp;
+    struct arphdr *arp = NULL;
     struct udphdr *udp = NULL;
     struct tcphdr *tcp = NULL;
+    char *appdump = NULL;
     u_int size_ip, size_transport;
-    u_int8_t protocol; // protocol au dessus de IP
-    char *appdump;
+    u_int8_t protocol;
     int etherType;
     
 
@@ -128,6 +130,14 @@ void analysePaquet(const u_char *packet, struct pcap_pkthdr infos, int mode, int
             size_ip = analyseExtensionIp6(packet, ip6);
             break;
         
+        case ETH_P_LOOPBACK:
+            /**
+             *  Ethernet Configuration Testing Protocol
+             *  Permet de faire des tests sur le niveau 2 sur le loopback
+             *  (similaire à echo au niveau 3)
+             */
+            break;
+
         default:
             fprintf(stderr, "(i) Ether type 0x%x not supported\n", etherType);
             return;
@@ -136,28 +146,31 @@ void analysePaquet(const u_char *packet, struct pcap_pkthdr infos, int mode, int
     /**
      *  NIVEAU 4 (analyse du numéro de protocole dans IPv4)
      */
-    switch (protocol)
+    if ((ip != NULL) || (ip6 != NULL))
     {
-        case IPPROTO_UDP:
-            udp = (struct udphdr *)(packet + ETHERNET_SIZE + size_ip);
-            size_transport = UDP_SIZE;
-            break;
-        case IPPROTO_TCP:
-            tcp = (struct tcphdr *)(packet + ETHERNET_SIZE + size_ip);
-            size_transport = tcp->th_off * 4;
-            break;
-        case IPPROTO_ICMP:
-            printf("Frame %d. %d bytes\tICMP\n", compteur, infos.len);
-            return;
-        case IPPROTO_IGMP:
-            printf("Frame %d. %d bytes\tIGMP\n", compteur, infos.len);
-            return;        
-        case IPPROTO_ICMPV6:
-            printf("Frame %d. %d bytes\tICMPv6\n", compteur, infos.len);
-            return;
-        default:
-            printf("(i) IP protocol number %d not supported\n", protocol);
-            return;
+        switch (protocol)
+        {
+            case IPPROTO_UDP:
+                udp = (struct udphdr *)(packet + ETHERNET_SIZE + size_ip);
+                size_transport = UDP_SIZE;
+                break;
+            case IPPROTO_TCP:
+                tcp = (struct tcphdr *)(packet + ETHERNET_SIZE + size_ip);
+                size_transport = tcp->th_off * 4;
+                break;
+            case IPPROTO_ICMP:
+                printf("Frame %d. %d bytes\tICMP\n", compteur, infos.len);
+                return;
+            case IPPROTO_IGMP:
+                printf("Frame %d. %d bytes\tIGMP\n", compteur, infos.len);
+                return;        
+            case IPPROTO_ICMPV6:
+                printf("Frame %d. %d bytes\tICMPv6\n", compteur, infos.len);
+                return;
+            default:
+                printf("(i) IP protocol number %d not supported\n", protocol);
+                return;
+        }
     }
 
     /**
@@ -175,13 +188,15 @@ void analysePaquet(const u_char *packet, struct pcap_pkthdr infos, int mode, int
             if (etherType == ETH_P_ARP)
             {
                 afficherARPConcis(arp);
+                printf("\n");
                 return; // plus rien après ARP
             }
             else if (etherType == ETH_P_IP)
                 afficherIpConcis(ip);
             else if (etherType == ETH_P_IPV6)
                 afficherIp6Concis(ip6);
-            afficherTransportConcis(udp, tcp);
+            if ((tcp != NULL) || (udp != NULL))
+                afficherTransportConcis(udp, tcp);
             // on vérifie qu'au dessus de TCP il y a de l'applicatif
             if (contientCoucheApplicative(tcp) == 0)        
                 afficherApplicatifConcis(udp, tcp, appdump);
@@ -199,8 +214,9 @@ void analysePaquet(const u_char *packet, struct pcap_pkthdr infos, int mode, int
             else if (etherType == ETH_P_IP)
                 afficherIpSynthe(ip);
             else if (etherType == ETH_P_IPV6)
-                {}
-            afficherTransportSynthe(udp, tcp);
+                afficherIp6Synthe(ip6);
+            if ((tcp != NULL) || (udp != NULL))
+                afficherTransportSynthe(udp, tcp);
             if (contientCoucheApplicative(tcp) == 0)
                 afficherApplicatifSynthe(udp, tcp, appdump);
             printf("\n\n");            
@@ -218,7 +234,8 @@ void analysePaquet(const u_char *packet, struct pcap_pkthdr infos, int mode, int
                 afficherIpComplet(ip);
             else if (etherType == ETH_P_IPV6)
                 {}
-            afficherTransportComplet(udp, tcp);
+            if ((tcp != NULL) || (udp != NULL))
+                afficherTransportComplet(udp, tcp);
             if (contientCoucheApplicative(tcp) == 0)            
                 afficherApplicatifComplet(udp, tcp, appdump);
             printf("\n\n");

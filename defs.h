@@ -42,12 +42,14 @@ enum{NONE, CONCIS, SYNTHE, COMPLET};
 #define TELNET      23
 #define SMTP        25
 #define DNS         53
-#define BOOTP_S     67  // server
+#define BOOTP_S     67  // serveur
 #define BOOTP_C     68  // client
 #define HTTP        80
 #define POP3        110
 #define NTP         123
 #define LDAP        389
 #define HTTPS       443
+#define DHCP6_C     546 // client
+#define DHCP6_S     547 // serveur
 
 #endif

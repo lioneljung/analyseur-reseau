@@ -22,8 +22,14 @@ void afficherHTTPcomplet(char *appdump)
     if (appdump == NULL)
         return;
     printf("HTTP\n\t");
-    while ((appdump[0] != CR) && (appdump[1] != LF))
+    while (appdump[0] != 0)
     {
+        // 0x0D0A => saut à la ligne
+        if ((appdump[0] == CR) && (appdump[1] == LF))
+        {
+            printf("\n");
+            count = 0;
+        }
         // saut à la ligne si trop de caractère sans \n lu
         if (count == 120)
         {
@@ -33,7 +39,7 @@ void afficherHTTPcomplet(char *appdump)
         if (isprint(appdump[0]))
             printf("%c", appdump[0]);
         else
-            printf(".");
+            printf(" ");
         if (appdump[0] == '\n')
             printf("\t");
         appdump++;

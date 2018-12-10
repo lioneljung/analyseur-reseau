@@ -33,7 +33,7 @@ void afficherEthernetComplet(struct ethhdr *ethernet)
 
 char * ARPtype(struct arphdr *arp)
 {
-    switch (arp->ar_op)
+    switch (ntohs(arp->ar_op))
     {
         case ARPOP_REQUEST:
             return "Request";
@@ -44,7 +44,7 @@ char * ARPtype(struct arphdr *arp)
         case ARPOP_RREPLY:
             return "RARP Reply";
     }
-    return "unknown";
+    return "unknown ARP type";
 }
 
 void afficherARPConcis(struct arphdr *arp)
@@ -100,10 +100,10 @@ void afficherIpComplet(struct iphdr * ip)
     printf("IPV4\n");
     printf("\tsrc: %s\n\tdest: %s\n", ip_src, ip_dst);
     printf("\tIHL: %d\n", ip->ihl);
-    printf("\tType of service: %d\n", ip->tos);
-    printf("\tLength: %d\n", ip->tot_len);
+    printf("\tType of service: %d\n", ntohs(ip->tos));
+    printf("\tLength: %d\n", ntohs(ip->tot_len));
     printf("\tid: %d\n", ip->id);
-    printf("\tfrag. offset: %d\n", ip->frag_off);
+    printf("\tfrag. offset: %d\n", ntohs(ip->frag_off));
     printf("\tTTL: %d\n", ip->ttl);
     printf("\tprotocol: %d\n", ip->protocol);
     printf("\tchecksum: 0x%x\n", ntohs(ip->check));
@@ -212,23 +212,23 @@ void afficherTransportComplet(struct udphdr *udp, struct tcphdr *tcp)
         printf("UDP\n");
         printf("\tsrc: %hu\n", ntohs(udp->source));
         printf("\tdst: %hu\n", ntohs(udp->dest));
-        printf("\tlength: %d\n", udp->len);
-        printf("\tchecksum: 0x%x\n", udp->check);
+        printf("\tlength: %d\n", ntohs(udp->len));
+        printf("\tchecksum: 0x%x\n", ntohs(udp->check));
     }
     else if (tcp != NULL)
     {
         printf("TCP\n");
         printf("\tsrc: %hu\n", ntohs(tcp->source));
         printf("\tdst: %hu\n", ntohs(tcp->dest));
-        printf("\tseq number: %u\n", tcp->seq);
-        printf("\tack number: %u\n", tcp->ack_seq);
-        printf("\toffset: %d\n", tcp->doff);
+        printf("\tseq number: %u\n", ntohs(tcp->seq));
+        printf("\tack number: %u\n", ntohs(tcp->ack_seq));
+        printf("\toffset: %d\n", ntohs(tcp->doff));
         printf("\tflags: C E U A P R S F\n");
         printf("\t       %d %d %d %d %d %d %d %d\n",
             tcp->res1, tcp->res2, tcp->urg, tcp->ack, 
             tcp->psh, tcp->rst, tcp->syn, tcp->fin);
-        printf("\twindow: %d\n", tcp->window);
-        printf("\tchecksum: 0x%x\n", tcp->check);
+        printf("\twindow: %d\n", ntohs(tcp->window));
+        printf("\tchecksum: 0x%x\n", ntohs(tcp->check));
         printf("\turgent pointer: 0x%x\n", tcp->urg_ptr);
         if (tcp->doff > 5)
         {
@@ -364,6 +364,8 @@ void afficherApplicatifConcis(struct udphdr *udp, struct tcphdr *tcp, char *appd
 void afficherApplicatifSynthe(struct udphdr *udp, struct tcphdr *tcp, char *appdump)
 {
     uint16_t portsrc, portdst, port;
+    int overTCP;
+    
     // cas où la couche applicative est vide
     if (appdump == NULL) 
         return;
@@ -388,7 +390,11 @@ void afficherApplicatifSynthe(struct udphdr *udp, struct tcphdr *tcp, char *appd
     switch (port)
     {
         case DNS:
-            afficherDNSsynthe(appdump);
+            if (tcp == NULL) 
+                overTCP = 0;
+            else 
+                overTCP = 1;
+            afficherDNSsynthe(appdump, overTCP);
             break;
         
         case HTTP:
@@ -399,6 +405,10 @@ void afficherApplicatifSynthe(struct udphdr *udp, struct tcphdr *tcp, char *appd
             printf("HTTPS - encrypted data\n");
             break;
 
+        case BOOTP_S:
+        case BOOTP_C:
+            break;
+
         default:
             break;
     }
@@ -407,6 +417,8 @@ void afficherApplicatifSynthe(struct udphdr *udp, struct tcphdr *tcp, char *appd
 void afficherApplicatifComplet(struct udphdr *udp, struct tcphdr *tcp, char *appdump)
 {
     uint16_t port, portsrc, portdst;
+    int overTCP;
+
     // cas où la couche applicative est vide
     if (appdump == NULL) 
         return;
@@ -431,7 +443,11 @@ void afficherApplicatifComplet(struct udphdr *udp, struct tcphdr *tcp, char *app
     switch (port)
     {
         case DNS:
-            afficherDNScomplet(appdump);
+            if (tcp == NULL) 
+                overTCP = 0;
+            else 
+                overTCP = 1;
+            afficherDNScomplet(appdump, overTCP);
             break;
 
         case HTTP:
