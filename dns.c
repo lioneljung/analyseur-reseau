@@ -195,34 +195,76 @@ void afficherDNScomplet(char *appdump, int overTCP)
     printf("\tAnswers:");
     printf("\n\t\t > ");
 
-    // checker si pointeur vers DN
-    printf("%d", appdump[0]);
-    if (appdump[0] > 0)
+
+/**      
+    0  1  2  3  4  5  6  7  8  9  0  1  2  3  4  5
+    +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    |                                               |
+    /                                               /
+    /                      NAME                     /
+    |                                               |
+    +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    |                      TYPE                     |
+    +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    |                     CLASS                     |
+    +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    |                      TTL                      |
+    |                                               |
+    +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    |                   RDLENGTH                    |
+    +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--|
+    /                     RDATA                     /
+    /                                               /
+    +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    */
+    for (int i = 0; i < hdr->adcount + hdr->ancount; i++)
     {
-        printf ("pointer!");
-        return;
-    }
-    else
-    {/*
-        while (appdump[0] != 0)
+        // checker si pointeur vers DN = les deux premiers bits à 1
+        if ((u_char)appdump[0] >= 192)
         {
-            lg = appdump[0];
-            appdump++;
-            // affichage du label octet par octet
-            for (int j = 0; j < lg; j++)
+            printf ("/!\\pointer");
+            appdump += 2;
+        }
+        else
+        {
+            while (appdump[0] != 0)
             {
-                printf("%c", appdump[0]);
+                lg = appdump[0];
                 appdump++;
+                // affichage du label octet par octet
+                for (int j = 0; j < lg; j++)
+                {
+                    printf("%c", appdump[0]);
+                    appdump++;
+                }
+                printf(".");
             }
-            printf(".");
-        }*/
-        if(bakptr) {}
+            if(bakptr) {}
+        }
+        
+        // ignorer le caractère NULL qui marque la fin du DN
+        appdump++;
+
+        // Parser type
+        type = (short *)appdump;
+        printf("\n\t\t > Type: %d", ntohs(*type));
+        appdump += 2;
+        
+        return; // On sort ici car le reste n'est pas encore géré
+
+        // parser class 
+        appdump += 2;
+
+        // parser TTL
+        appdump += 8;
+
+        // parser RDLength
+        appdump += 4;
+
+        // parser RDATA
+        appdump += 4; // peut être variable...
+
     }
-
-    // ignorer le caractère NULL qui marque la fin du DN
-    appdump++;
-
-    //printf("Name: %s\n", appdump);
 
     printf("\n");
 }
