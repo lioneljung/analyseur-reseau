@@ -1,4 +1,5 @@
 #include <string.h>
+#include <ctype.h>
 #include "utils.h"
 #include "defs.h"
 #include "applicatif.h"
@@ -20,7 +21,7 @@ void afficherEthernetComplet(struct ethhdr *ethernet)
     char mac_src[MAC_SIZE], mac_dst[MAC_SIZE];
     getMac(ethernet->h_source, mac_src);
     getMac(ethernet->h_dest, mac_dst);
-    printf("ETHERNET\n");
+    printf("\nETHERNET\n");
     printf("\tsrc: %s \n\tdest: %s\n", mac_src, mac_dst);
     printf("\ttype: %d\n", ethernet->h_proto);    
 }
@@ -72,14 +73,43 @@ void afficherARPSynthe(struct arphdr *arp)
     printf("operation=%s - hardware type=%s\n", ARPtype(arp), ARPHardware(arp));
 }
 
-void afficherARPComplet(struct arphdr *arp)
+void afficherARPComplet(struct arphdr *arp, u_char *packet)
 {
+    int i;
     printf("ARP\n");
     printf("\tHardware type: %s (%d)\n", ARPHardware(arp), ntohs(arp->ar_hrd));
     printf("\tProtocol type:");
     if (ntohs(arp->ar_pro) == 0x0800)
         printf(" IP");
-    printf(" (%d)", ntohs(arp->ar_pro));
+    printf(" (%d)\n", ntohs(arp->ar_pro));
+    printf("\tHardware Address Length: %d\n", arp->ar_hln);
+    printf("\tProtocol Address Length: %d\n", arp->ar_pln);
+    printf("\tOperation: %s\n", ARPtype(arp));
+    packet += ETHERNET_SIZE + sizeof(struct arphdr);
+    printf("\tSender Hardware Address: ");
+    for (i = 0; i < arp->ar_hln; i++)
+    {
+        printf("%X:", packet[0]);
+        packet++;
+    }
+    printf("\n\tSender Protocol Address: ");
+    for (i = 0; i < arp->ar_pln; i++)
+    {
+        printf("%d.", packet[0]);
+        packet++;
+    }
+    printf("\n\tTarget Hardware Address: ");
+    for (i = 0; i < arp->ar_hln; i++)
+    {
+        printf("%X:", packet[0]);
+        packet++;
+    }
+    printf("\n\tTarget Protocol Address: ");
+    for (i = 0; i < arp->ar_pln; i++)
+    {
+        printf("%d.", packet[0]);
+        packet++;
+    }
 }
 
 

@@ -24,7 +24,7 @@ void afficherARPSynthe(struct arphdr *arp);
 /**
  * \brief Affichage complet pour ARP
  */
-void afficherARPComplet(struct arphdr *arp);
+void afficherARPComplet(struct arphdr *arp, const u_char *p);
 
 /**
  * \brief Affichage conçis de l'entête IP.

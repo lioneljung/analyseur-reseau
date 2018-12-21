@@ -121,7 +121,7 @@ void analysePaquet(const u_char *packet, struct pcap_pkthdr infos, int mode, int
     struct udphdr *udp = NULL;
     struct tcphdr *tcp = NULL;
     char *appdump = NULL;
-    u_int size_ip, size_transport;
+    u_int size_ip = 0, size_transport = 0;
     u_int8_t protocol;
     int etherType;
     
@@ -163,6 +163,8 @@ void analysePaquet(const u_char *packet, struct pcap_pkthdr infos, int mode, int
 
         default:
             fprintf(stderr, "(i) Ether type 0x%x not supported\n", etherType);
+            if (mode == 3)
+                printf("\n--------------------------------------------\n\n");            
             return;
     }
 
@@ -249,7 +251,8 @@ void analysePaquet(const u_char *packet, struct pcap_pkthdr infos, int mode, int
             afficherEthernetComplet(ethernet);
             if (etherType == ETH_P_ARP)
             {
-                afficherARPComplet(arp);
+                afficherARPComplet(arp, packet);
+                printf("\n----------------------------------------\n\n");            
                 return; // plus rien après ARP
             }
             else if (etherType == ETH_P_IP)
@@ -260,7 +263,7 @@ void analysePaquet(const u_char *packet, struct pcap_pkthdr infos, int mode, int
                 afficherTransportComplet(udp, tcp);
             if (contientCoucheApplicative(tcp) == 0)            
                 afficherApplicatifComplet(udp, tcp, appdump);
-            printf("\n----------------------------------\n\n");
+            printf("\n--------------------------------------------\n\n");
             break;
         
         default:

@@ -216,6 +216,7 @@ void afficherDNScomplet(char *appdump, int overTCP)
             }
             printf(".");
         }*/
+        if(bakptr) {}
     }
 
     // ignorer le caractère NULL qui marque la fin du DN

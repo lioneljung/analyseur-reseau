@@ -5,7 +5,7 @@
 void usage(char *argv[])
 {
     printf("Ce programme permet de voir le trafic réseau.\n");
-    printf("usage: %s [-i <interface>] [-o <fichier>] [-v <1..3>]\n", argv[0]);
+    printf("usage: %s [-i <interface>] [-o <fichier>] [-v <1..3>] [-f <filtre>]\n", argv[0]);
     printf("option:\n");
     printf("\t-i: indiquer l'interface réseau dont l'on veut voir le trafic\n");
     printf("\t-o: spécifier un fichier pour analyser le traffic hors ligne\n");
@@ -13,6 +13,7 @@ void usage(char *argv[])
     printf("\t\t- 1 = très concis\n");
     printf("\t\t- 2 = synthétique\n");
     printf("\t\t- 3 = complet\n");
+    printf("\t-f: appliquer un filtre selon la forme PCAP entre guillemets\n");
     exit(EXIT_FAILURE);
 }
 

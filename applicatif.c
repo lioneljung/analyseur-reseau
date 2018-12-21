@@ -5,6 +5,7 @@
 #include "utils.h"
 #include "dns.h"
 #include "applicatif.h"
+#include "bootp.h"
 
 
 void afficherASCIIsynthe(char *appdump, char *protocol)
@@ -21,9 +22,13 @@ void afficherASCIIsynthe(char *appdump, char *protocol)
 
 void afficherASCIIcomplet(char *appdump, char *protocol)
 {
-    int count = 0;
+    int count = 0, sortieRapide = 0;
     if (appdump == NULL)
         return;
+    if ((strncmp(protocol, "FTP", 3) == 0) || (strncmp(protocol, "TELNET", 6) == 0))
+    {
+        sortieRapide = 1;
+    }
     printf("%s\n\t", protocol);
     while (appdump[0] != 0)
     {
@@ -32,6 +37,10 @@ void afficherASCIIcomplet(char *appdump, char *protocol)
         {
             printf("\n");
             count = 0;
+            if (sortieRapide)
+            {
+                return;
+            }
         }
         // saut à la ligne si trop de caractère sans \n lu
         if (count == 120)
@@ -221,6 +230,7 @@ void afficherApplicatifSynthe(struct udphdr *udp, struct tcphdr *tcp, char *appd
 
         case BOOTP_C:
         case BOOTP_S:
+            afficherBootpSynthe(appdump);
             break;
         
         case HTTP:
@@ -290,6 +300,11 @@ void afficherApplicatifComplet(struct udphdr *udp, struct tcphdr *tcp, char *app
             else 
                 overTCP = 1;
             afficherDNScomplet(appdump, overTCP);
+            break;
+
+        case BOOTP_C:
+        case BOOTP_S:
+            afficherBootpComplet(appdump);
             break;
 
         case HTTP:
