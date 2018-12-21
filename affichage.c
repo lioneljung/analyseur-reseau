@@ -1,7 +1,7 @@
 #include <string.h>
 #include "utils.h"
 #include "defs.h"
-#include "affichage.h"
+#include "applicatif.h"
 
 /**
  *  AFFICHAGE ETHERNET
@@ -47,24 +47,40 @@ char * ARPtype(struct arphdr *arp)
     return "unknown ARP type";
 }
 
+char * ARPHardware(struct arphdr *arp)
+{
+    char *r = "";
+    switch (ntohs(arp->ar_hrd))
+    {
+        case ARPHRD_ETHER:
+            return "Ethernet 10/100 Mbps";
+        
+        default:
+            snprintf(r, 3, "%d", ntohs(arp->ar_hrd));
+            return r;
+    }
+}
+
 void afficherARPConcis(struct arphdr *arp)
 {
-    printf("ARP %s", ARPtype(arp));
+    printf("ARP %s\n", ARPtype(arp));
 }
 
 void afficherARPSynthe(struct arphdr *arp)
 {
     printf("ARP: \t\t");
-    printf("type=%s - ", ARPtype(arp));
+    printf("operation=%s - hardware type=%s\n", ARPtype(arp), ARPHardware(arp));
 }
 
 void afficherARPComplet(struct arphdr *arp)
 {
     printf("ARP\n");
-    printf("\ttype: %s\n", ARPtype(arp));
+    printf("\tHardware type: %s (%d)\n", ARPHardware(arp), ntohs(arp->ar_hrd));
+    printf("\tProtocol type:");
+    if (ntohs(arp->ar_pro) == 0x0800)
+        printf(" IP");
+    printf(" (%d)", ntohs(arp->ar_pro));
 }
-
-
 
 
 
@@ -241,233 +257,3 @@ void afficherTransportComplet(struct udphdr *udp, struct tcphdr *tcp)
         return;
     }    
 }
-
-
-
-
-/**
- *  AFFICHAGE APPLICATIF
- */
-// renvoie le numéro de port si type trouvé, -1 sinon
-int afficherTypeApplicatif(uint16_t port, int afficher)
-{
-    switch (port)
-    {
-        case FTPDATA:
-            if (afficher) 
-                printf(" - FTP Data");
-            return FTPDATA;
-            break;
-
-        case FTPCMD:
-            if (afficher) 
-                printf(" - FTP Command");
-            return FTPCMD;
-            break;
-
-        case SSH:
-            if (afficher)
-                printf(" - SSH");
-            return SSH;
-            break;
-
-        case TELNET:
-            if (afficher)
-                printf(" - TELNET");
-            return TELNET;
-            break;
-
-        case SMTP:
-            if (afficher)
-                printf(" - SMTP");
-            return SMTP;        
-            break;
-        
-        case DNS:
-            if (afficher)
-                printf(" - DNS");
-            return DNS;        
-            break;
-        
-        case BOOTP_C:
-            if (afficher)
-                printf(" - BOOTP or DHCP client");
-            return BOOTP_C;        
-            break;
-
-        case BOOTP_S:
-            if (afficher)
-                printf(" - BOOTP or DHCP server");
-            return BOOTP_S;        
-            break;
-        
-        case HTTP:
-            if (afficher)
-                printf(" - HTTP");
-            return HTTP;        
-            break;
-        
-        case POP3:
-            if (afficher)
-                printf(" - POP3");
-            return POP3;        
-            break;
-
-        case NTP:
-            if (afficher)
-                printf(" - NTP");
-            return NTP;
-            break;
-
-        case LDAP:
-            if (afficher)
-                printf(" - LDAP");
-            return LDAP;
-            break;
-        
-        case HTTPS:
-            if (afficher)
-                printf(" - HTTPS");
-            return HTTPS;
-            break;
-        
-        default:
-            break;
-    }
-    return ERROR;
-}
-
-void afficherApplicatifConcis(struct udphdr *udp, struct tcphdr *tcp, char *appdump)
-{
-    uint16_t portsrc, portdst;
-   
-    // cas où la couche applicative est vide
-    if (appdump == NULL) 
-        return;
-    
-    if (udp != NULL)
-    {
-        portsrc = ntohs(udp->source);
-        portdst = ntohs(udp->dest);
-    }
-    else if (tcp != NULL)
-    {
-        portsrc = ntohs(tcp->source);
-        portdst = ntohs(tcp->dest);
-    }
-
-    // on regarde si le port d'un protocole applicatif connu apparait
-    if (afficherTypeApplicatif(portsrc, 1) != ERROR) {}
-    else if (afficherTypeApplicatif(portdst, 1) != ERROR) {}
-}
-
-void afficherApplicatifSynthe(struct udphdr *udp, struct tcphdr *tcp, char *appdump)
-{
-    uint16_t portsrc, portdst, port;
-    int overTCP;
-    
-    // cas où la couche applicative est vide
-    if (appdump == NULL) 
-        return;
-
-    // déterminer le protocole applicatif
-    if (udp != NULL)
-    {
-        portsrc = ntohs(udp->source);
-        portdst = ntohs(udp->dest);
-    }
-    else if (tcp != NULL)
-    {
-        portsrc = ntohs(tcp->source);
-        portdst = ntohs(tcp->dest);
-    }
-    if (afficherTypeApplicatif(portsrc, 0) != ERROR)
-        port = portsrc;
-    else if (afficherTypeApplicatif(portdst, 0) != ERROR)
-        port = portdst;
-
-    // affichage selon port remarquable trouvé
-    switch (port)
-    {
-        case DNS:
-            if (tcp == NULL) 
-                overTCP = 0;
-            else 
-                overTCP = 1;
-            afficherDNSsynthe(appdump, overTCP);
-            break;
-        
-        case HTTP:
-            afficherHTTPsynthe(appdump);
-            break;
-
-        case HTTPS:
-            printf("HTTPS - encrypted data\n");
-            break;
-
-        case BOOTP_S:
-        case BOOTP_C:
-            break;
-
-        default:
-            break;
-    }
-}
-
-void afficherApplicatifComplet(struct udphdr *udp, struct tcphdr *tcp, char *appdump)
-{
-    uint16_t port, portsrc, portdst;
-    int overTCP;
-
-    // cas où la couche applicative est vide
-    if (appdump == NULL) 
-        return;
-    
-    // déterminer le protocole applicatif
-    if (udp != NULL)
-    {
-        portsrc = ntohs(udp->source);
-        portdst = ntohs(udp->dest);
-    }
-    else if (tcp != NULL)
-    {
-        portsrc = ntohs(tcp->source);
-        portdst = ntohs(tcp->dest);
-    }
-    if (afficherTypeApplicatif(portsrc, 0) != ERROR)
-        port = portsrc;
-    else if (afficherTypeApplicatif(portdst, 0) != ERROR)
-        port = portdst;
-
-    // affichage selon port remarquable trouvé
-    switch (port)
-    {
-        case DNS:
-            if (tcp == NULL) 
-                overTCP = 0;
-            else 
-                overTCP = 1;
-            afficherDNScomplet(appdump, overTCP);
-            break;
-
-        case HTTP:
-            afficherHTTPcomplet(appdump);
-            break;
-
-        case HTTPS:
-            printf("HTTPS - encrypted data\n");
-            break;
-
-        default:
-            break;
-    }
-}
-
-
-/**
- *  AFFICHAGE DHCP
- */
-
-/**
- * AFFICHAGE DNS
- */

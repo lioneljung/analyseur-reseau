@@ -1,7 +1,7 @@
-CFLAGS = -Wall -Wextra -Werror -lpcap -g
+CFLAGS = -Wall -Wextra -lpcap -g
 CC = gcc
 OBJECTS = utils.o analyse.o affichage.o \
-	ipv6.o dns.o http.o
+	ipv6.o dns.o applicatif.o
 EXEC = analyseur
 
 all: main.c $(OBJECTS)

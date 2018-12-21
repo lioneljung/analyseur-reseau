@@ -14,9 +14,9 @@ int estTerminal(u_int8_t protocol)
         case IPPROTO_ROUTING:   // Routing header for ipv6
         case IPPROTO_AH:        // Authentification Header
         case IPPROTO_ESP:       // Encapsulating security payload
-            return ERROR;
+            return 0;
     }
-    return 0;
+    return 1;
 }
 
 // renvoie la taille totale d'IPv6 dans le paquet
@@ -26,7 +26,7 @@ u_int analyseExtensionIp6(const u_char *packet, struct ip6_hdr *ip6)
     u_int size = IP6_SIZE;
     struct ip6_ext *extension;
 
-    while (estTerminal(protocol) == ERROR)
+    while (!estTerminal(protocol))
     {
         extension = (struct ip6_ext*)(packet+ETHERNET_SIZE+size);
         size += extension->ip6e_len * 8;

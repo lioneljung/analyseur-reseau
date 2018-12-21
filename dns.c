@@ -8,37 +8,38 @@ void afficherDNSsynthe(char *appdump, int overTCP)
     struct dnshdr *hdr;
     if (appdump == NULL)
         return;
-    
-    // si on a du DNS-over-TCP, on ignore les 2 premiers octets
-    if (overTCP) appdump += 2;
 
-    hdr = (struct dnshdr*)appdump;
+    // si on a du DNS-over-TCP, on ignore les 2 premiers octets
+    if (overTCP)
+        appdump += 2;
+
+    hdr = (struct dnshdr *)appdump;
     printf("DNS: \t\t");
 
     // affichage type d'opération
     switch (hdr->opcode)
     {
-        case DNS_OPCODE_QUERY:
-            printf("Query - ");
-            break;
+    case DNS_OPCODE_QUERY:
+        printf("Query - ");
+        break;
 
-        case DNS_OPCODE_IQUERY:
-            printf("Inverse query - ");
-            break;
+    case DNS_OPCODE_IQUERY:
+        printf("Inverse query - ");
+        break;
 
-        case DNS_OPCODE_STATUS:
-            printf("Status request - ");
-            break;
-        
-        case DNS_OPCODE_NOTIFY:
-            printf("Notify - ");
-            break;
-        
-        case DNS_OPCODE_UPDATE:
-            printf("Update - ");
-            break;
+    case DNS_OPCODE_STATUS:
+        printf("Status request - ");
+        break;
+
+    case DNS_OPCODE_NOTIFY:
+        printf("Notify - ");
+        break;
+
+    case DNS_OPCODE_UPDATE:
+        printf("Update - ");
+        break;
     }
-    
+
     printf("\n");
 }
 
@@ -47,6 +48,7 @@ void afficherDNScomplet(char *appdump, int overTCP)
     struct dnshdr *hdr;
     short *size, *type;
     char lg;
+    char *bakptr;
     if (appdump == NULL)
         return;
 
@@ -55,12 +57,13 @@ void afficherDNScomplet(char *appdump, int overTCP)
     // Si over TCP, les 2 premiers octets représentent la taille
     if (overTCP)
     {
-        size = (short*)appdump;
+        size = (short *)appdump;
         appdump += 2;
         printf("\tLength: %d\n", ntohs(*size));
     }
 
-    hdr = (struct dnshdr*)appdump;
+    hdr = (struct dnshdr *)appdump;
+    bakptr = appdump;
 
     // identifiant
     printf("\tTransaction ID: 0x%x", ntohs(hdr->id));
@@ -70,32 +73,32 @@ void afficherDNScomplet(char *appdump, int overTCP)
     printf("\tQR: %d - ", hdr->qr);
     if (hdr->qr == 0)
         printf("query\n");
-    else 
+    else
         printf("response\n");
 
     // affichage type d'opération
     printf("\tOpcode: %d - ", hdr->opcode);
     switch (hdr->opcode)
     {
-        case DNS_OPCODE_QUERY:
-            printf("Standard query");
-            break;
+    case DNS_OPCODE_QUERY:
+        printf("Standard query");
+        break;
 
-        case DNS_OPCODE_IQUERY:
-            printf("Inverse query");
-            break;
+    case DNS_OPCODE_IQUERY:
+        printf("Inverse query");
+        break;
 
-        case DNS_OPCODE_STATUS:
-            printf("Status request");
-            break;
-        
-        case DNS_OPCODE_NOTIFY:
-            printf("Notify");
-            break;
-        
-        case DNS_OPCODE_UPDATE:
-            printf("Update");
-            break;
+    case DNS_OPCODE_STATUS:
+        printf("Status request");
+        break;
+
+    case DNS_OPCODE_NOTIFY:
+        printf("Notify");
+        break;
+
+    case DNS_OPCODE_UPDATE:
+        printf("Update");
+        break;
     }
     printf("\n");
 
@@ -110,7 +113,7 @@ void afficherDNScomplet(char *appdump, int overTCP)
     // RD (Recursion Desired)
     printf("\tRecursion desired: %d", hdr->rd);
     printf("\n");
-    
+
     // RA (Recursion Available)
     printf("\tRecursion available: %d", hdr->ra);
     printf("\n");
@@ -126,10 +129,10 @@ void afficherDNScomplet(char *appdump, int overTCP)
     // RCODE (Response code)
     printf("\tRCODE: %d", ntohs(hdr->rcode));
     if (hdr->qr == 1)
-    {   
+    {
         if (ntohs(hdr->rcode) == 0)
             printf(" - no error condition");
-        else 
+        else
             printf(" - error");
     }
     printf("\n");
@@ -151,7 +154,7 @@ void afficherDNScomplet(char *appdump, int overTCP)
     printf("\n");
 
     // on saute le header dans APPDUMP
-    appdump += sizeof(struct dnshdr);//DNS_HDR_SIZE;
+    appdump += sizeof(struct dnshdr); //DNS_HDR_SIZE;
 
     // Queries
     if (ntohs(hdr->qcount) > 0)
@@ -159,7 +162,7 @@ void afficherDNScomplet(char *appdump, int overTCP)
         printf("\tQueries:");
         for (int i = 0; i < ntohs(hdr->qcount); i++)
         {
-            printf("\n\t\t -> ");
+            printf("\n\t\t > ");
             // parser tous les labels du nom de domaine
             while (appdump[0] != 0)
             {
@@ -175,20 +178,50 @@ void afficherDNScomplet(char *appdump, int overTCP)
             }
 
             // ignorer le caractère NULL qui marque la fin du DN
-            appdump++; 
-            
+            appdump++;
+
             // affichage des informations sur le DN
             printf("\n");
-            type = (short*)appdump;
+            type = (short *)appdump;
             printf("\t\t\t  query type: %d\n", ntohs(*type));
             appdump += 2;
-            type = (short*)appdump;            
+            type = (short *)appdump;
             printf("\t\t\t  query class: %d\n", ntohs(*type));
             appdump += 2;
         }
     }
-    printf("\n");
 
     // Answers
+    printf("\tAnswers:");
+    printf("\n\t\t > ");
 
+    // checker si pointeur vers DN
+    printf("%d", appdump[0]);
+    if (appdump[0] > 0)
+    {
+        printf ("pointer!");
+        return;
+    }
+    else
+    {/*
+        while (appdump[0] != 0)
+        {
+            lg = appdump[0];
+            appdump++;
+            // affichage du label octet par octet
+            for (int j = 0; j < lg; j++)
+            {
+                printf("%c", appdump[0]);
+                appdump++;
+            }
+            printf(".");
+        }*/
+    }
+
+    // ignorer le caractère NULL qui marque la fin du DN
+    appdump++;
+
+    //printf("Name: %s\n", appdump);
+
+    printf("\n");
 }

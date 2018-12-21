@@ -47,6 +47,7 @@ enum{NONE, CONCIS, SYNTHE, COMPLET};
 #define HTTP        80
 #define POP3        110
 #define NTP         123
+#define IMAP        143
 #define LDAP        389
 #define HTTPS       443
 #define DHCP6_C     546 // client

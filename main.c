@@ -9,10 +9,11 @@ int main(int argc, char *argv[])
     char *name = "";
     char *mydev = "";
     char *filepath;
+    char *filtre = NULL;
     char errbuf[PCAP_ERRBUF_SIZE];    
     pcap_if_t *alldevs;
     pcap_if_t *tmp;
-    int c, iflag = 0, oflag = 0, verbosite = CONCIS;
+    int c, iflag = 0, oflag = 0, fflag = 0, verbosite = CONCIS;
     FILE *fileflux = NULL;
     memset(errbuf, '0', PCAP_ERRBUF_SIZE);
 
@@ -38,6 +39,12 @@ int main(int argc, char *argv[])
             oflag++;
             filepath = optarg;
             break;
+        case 'f':
+            // filtre
+            fflag++;
+            filtre = optarg;
+            break;
+
         case 'v':
             // niveau de verbosité (par défaut 1)
             verbosite = atoi(optarg);
@@ -51,6 +58,12 @@ int main(int argc, char *argv[])
             usage(argv);
             break;
         }
+    }
+
+    if (iflag && oflag)
+    {
+        fprintf(stderr, "Erreur: option -o et -i incompatibles\n");
+        exit(EXIT_FAILURE);
     }
 
     // gestion des options
@@ -98,7 +111,7 @@ int main(int argc, char *argv[])
     }
 
     // programme se termine avec SIGINT
-    if(analyse(mydev, fileflux, verbosite) == ERROR)
+    if(analyse(mydev, fileflux, verbosite, filtre) == ERROR)
     {
         fprintf(stderr, "Erreur: analyse échouée.\n");
         exit(EXIT_FAILURE);

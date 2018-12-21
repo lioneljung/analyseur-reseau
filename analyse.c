@@ -4,6 +4,7 @@
 #include "utils.h"
 #include "ipv6.h"
 #include "affichage.h"
+#include "applicatif.h"
 
 volatile sig_atomic_t sigIntIn = 0; // réception d'un signal SIGINT
 
@@ -18,13 +19,13 @@ void sigInt(__attribute__((unused))int sig)
 /**
  * Analyse complète en live ou d'un fichier
  */
-int analyse(const char *mydev, FILE *fileflux, int mode)
+int analyse(const char *mydev, FILE *fileflux, int mode, char *filtre)
 {
     char errbuf[PCAP_ERRBUF_SIZE];
     const u_char *packet;
     struct pcap_pkthdr infos;
     pcap_t *handle = NULL;
-    int readTime = 0, compteur = 1;
+    int readTime = 0, compteur = 0;
     struct sigaction sint;
 
     // mise en place de la gestion du signal SIGINT
@@ -42,6 +43,7 @@ int analyse(const char *mydev, FILE *fileflux, int mode)
             fprintf(stderr, "Erreur pcap_open_live: %s\n", errbuf);
             return ERROR;
         }
+        appliquerFiltre(handle, filtre);
         while (sigIntIn == 0)
         {
             // lire le prochain paquet
@@ -60,6 +62,7 @@ int analyse(const char *mydev, FILE *fileflux, int mode)
             fprintf(stderr, "Erreur pcap_fopen_offline: %s\n", errbuf);
             return ERROR;
         }
+        appliquerFiltre(handle, filtre);
         while ((packet != NULL) && (sigIntIn == 0))
         {
             if ((packet = pcap_next(handle, &infos)) != NULL)
@@ -85,6 +88,26 @@ pcap_t *initSnifOffline(FILE *fichier, char *errbuf)
     pcap_t *handle;
     handle = pcap_fopen_offline(fichier, errbuf);
     return handle;
+}
+
+void appliquerFiltre(pcap_t *handle, char *filtre)
+{
+    struct bpf_program bufp;
+    if (filtre != NULL)
+    {
+        if (pcap_compile(handle, &bufp, filtre, 1, PCAP_NETMASK_UNKNOWN) == ERROR)
+        {
+            pcap_perror(handle, "Compile");
+            fprintf(stderr, "Le filtre %s n'a pas été appliqué\n", filtre);
+            exit(EXIT_FAILURE);
+        }
+        if (pcap_setfilter(handle, &bufp) == ERROR)
+        {
+            pcap_perror(handle, "setfilter");
+            fprintf(stderr, "Le filtre %s n'a pas pu être appliqué\n", filtre);
+            exit(EXIT_FAILURE);
+        }
+    }
 }
 
 
@@ -223,7 +246,6 @@ void analysePaquet(const u_char *packet, struct pcap_pkthdr infos, int mode, int
             break;
 
         case COMPLET:
-            printf("\n");
             afficherEthernetComplet(ethernet);
             if (etherType == ETH_P_ARP)
             {
@@ -238,7 +260,7 @@ void analysePaquet(const u_char *packet, struct pcap_pkthdr infos, int mode, int
                 afficherTransportComplet(udp, tcp);
             if (contientCoucheApplicative(tcp) == 0)            
                 afficherApplicatifComplet(udp, tcp, appdump);
-            printf("\n\n");
+            printf("\n----------------------------------\n\n");
             break;
         
         default:

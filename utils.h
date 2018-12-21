@@ -28,7 +28,7 @@ void getMac(unsigned char * addr, char * dst);
  * \brief L'analyse du trafic réseau se passe ici.
  * \return Renvoie -1 en cas d'erreur
  */
-int analyse(const char *mydev, FILE *fileflux, int mode);
+int analyse(const char *mydev, FILE *fileflux, int mode, char *filtre);
 
 /**
  * \brief Initialisation d'une session de sniffing en directe.
@@ -39,6 +39,11 @@ pcap_t *initSnifLive(const char *mydev, int readTime, char *errbuf);
  * \brief Initialisation d'une session de lecture de paquets dans un fichier.
  */
 pcap_t *initSnifOffline(FILE *fichier, char *errbuf);
+
+/**
+ * \brief Applique un filtre sur handle si "filtre" n'est pas NULL
+ */
+void appliquerFiltre(pcap_t *handle, char *filtre);
 
 /**
  * \brief Analyse d'un paquet. Affichage selon le mode choisi.

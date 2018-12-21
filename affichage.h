@@ -67,25 +67,5 @@ void afficherTransportSynthe(struct udphdr *udp, struct tcphdr *tcp);
  */
 void afficherTransportComplet(struct udphdr *udp, struct tcphdr *tcp);
 
-/**
- * \brief Affichage du protocole applicatif de manière conçise
- */
-void afficherApplicatifConcis(struct udphdr *udp, struct tcphdr *tcp, char *appdump);
-
-/**
- * \brief Affichage du protocole applicatif de manière synthétique
- */
-void afficherApplicatifSynthe(struct udphdr *udp, struct tcphdr *tcp, char *appdump);
-
-/**
- * \brief Affichage du protocole applicatif de manière complète
- */
-void afficherApplicatifComplet(struct udphdr *udp, struct tcphdr *tcp, char *appdump);
-
-/**
- *  Protocoles applicatifs définies dans d'autres fichiers
- */
-#include "dns.h"
-#include "http.h"
 
 #endif
