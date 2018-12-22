@@ -213,7 +213,6 @@ void analysePaquet(const u_char *packet, struct pcap_pkthdr infos, int mode, int
             if (etherType == ETH_P_ARP)
             {
                 afficherARPConcis(arp);
-                printf("\n");
                 return; // plus rien après ARP
             }
             else if (etherType == ETH_P_IP)
